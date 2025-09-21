@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi SMP - Servidor de Minecraft</title>
+  <style>
+    body {font-family: Arial, sans-serif; margin:0; padding:0; background:#1e1e1e; color:white;}
+    header, footer {background:#2c2c2c; padding:1rem; text-align:center;}
+    nav a {margin:0 10px; color:#00ffcc; text-decoration:none;}
+    section {padding:2rem; max-width:900px; margin:auto;}
+    .btn {background:#00ffcc; color:black; padding:10px; border:none; cursor:pointer; border-radius:5px;}
+    .card {background:#2c2c2c; padding:1rem; margin:1rem 0; border-radius:8px;}
+    iframe {border:none;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌍 Mi SMP</h1>
+    <nav>
+      <a href="#inicio">Inicio</a>
+      <a href="#reglas">Reglas</a>
+      <a href="#tienda">Tienda</a>
+      <a href="#eventos">Eventos</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </header>
+
+  <section id="inicio">
+    <h2>Presentación</h2>
+    <p>Bienvenido a Mi SMP, un servidor survival amistoso. Versión: <strong>1.20.4</strong></p>
+    <button class="btn" onclick="copyIP()">📋 Copiar IP</button>
+    <p id="copyMsg" style="color:#00ffcc;"></p>
+    <div class="card">
+      <h3>Discord</h3>
+      <iframe src="https://discord.com/widget?id=TU_ID_DE_SERVIDOR&theme=dark" width="350" height="300"></iframe>
+    </div>
+  </section>
+
+  <section id="eventos">
+    <h2>Calendario de Eventos</h2>
+    <iframe src="https://calendar.google.com/calendar/embed?src=TU_CALENDARIO_PUBLICO&ctz=America%2FSanto_Domingo" 
+            style="border: 0" width="100%" height="600"></iframe>
+  </section>
+
+  <section id="votacion">
+    <h2>Vota por el Servidor</h2>
+    <ul>
+      <li><a href="https://minecraft-mp.com" target="_blank">Votar en Minecraft-MP</a></li>
+      <li><a href="https://www.planetminecraft.com/" target="_blank">Votar en PlanetMinecraft</a></li>
+    </ul>
+  </section>
+
+  <section id="noticias">
+    <h2>Noticias / Blog</h2>
+    <p>Aquí puedes publicar actualizaciones o eventos.</p>
+  </section>
+
+  <section id="reglas">
+    <h2>Reglas y Guías</h2>
+    <p>1. Sé respetuoso. <br>2. No hagas trampa. <br>3. Cuida el mundo. </p>
+  </section>
+
+  <section id="tienda">
+    <h2>Tienda / Donaciones</h2>
+    <p>Apoya el servidor usando PayPal: <a href="https://www.paypal.com/paypalme/TUENLACE" target="_blank">Donar</a></p>
+  </section>
+
+  <section id="contacto">
+    <h2>Contacto</h2>
+    <p>Únete a nuestro Discord o escríbenos al correo: <strong>admin@tuweb.com</strong></p>
+  </section>
+
+  <footer>
+    © 2025 Mi SMP - Todos los derechos reservados
+  </footer>
+
+  <script>
+    function copyIP() {
+      const ip = "tuservidor.minecraft.net";
+      navigator.clipboard.writeText(ip).then(() => {
+        document.getElementById('copyMsg').innerText = "✅ IP copiada: " + ip;
+      });
+    }
+  </script>
+</body>
+</html>
+
