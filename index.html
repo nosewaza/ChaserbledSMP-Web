@@ -32,6 +32,7 @@
       background:var(--main-color); color:black;
       padding:10px; border:none; cursor:pointer; border-radius:5px;
       transition: transform 0.2s;
+      margin:5px;
     }
     .btn:hover {transform: scale(1.05);}
     .card {
@@ -63,8 +64,13 @@
   <section id="Inicio">
     <h2>Presentación</h2>
     <p>Bienvenido a <span class="highlight">ChaserbledSMP 🌟</span>, un servidor survival amistoso. Versión: <strong>1.20.4</strong></p>
-    <button class="btn" onclick="copyIP()">📋 Copiar IP</button>
+    
+    <!-- Botones para copiar IP -->
+    <button class="btn" onclick="copyIP('java')">📋 Copiar IP (Java)</button>
+    <button class="btn" onclick="copyIP('bedrock')">📋 Copiar IP (Bedrock)</button>
+    
     <p id="copyMsg" style="color:var(--main-color);"></p>
+
     <div class="card">
       <h3>Discord</h3>
       <iframe src="https://discord.com/widget?id=TU_ID_DE_SERVIDOR&theme=dark" width="350" height="300"></iframe>
@@ -125,8 +131,13 @@
   </footer>
 
   <script>
-    function copyIP() {
-      const ip = "ChaserbledSMP.aternos.me";
+    function copyIP(type) {
+      let ip = "";
+      if (type === "java") {
+        ip = "ChaserbledSMP.aternos.me";
+      } else if (type === "bedrock") {
+        ip = "ChaserbledSMP.aternos.me:15465";
+      }
       navigator.clipboard.writeText(ip).then(() => {
         document.getElementById('copyMsg').innerText = "✅ IP copiada: " + ip;
       });
