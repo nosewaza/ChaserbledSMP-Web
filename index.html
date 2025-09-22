@@ -5,13 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ChaserbledSMP - Servidor de Minecraft</title>
   <style>
-    body {font-family: Arial, sans-serif; margin:0; padding:0; background:#1e1e1e; color:white;}
-    header, footer {background:#2c2c2c; padding:1rem; text-align:center;}
-    nav a {margin:0 10px; color:#00ffcc; text-decoration:none;}
+    :root {
+      --main-bg: #1e1e1e;
+      --main-color: #00ffcc;
+      --card-bg: #2c2c2c;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin:0; padding:0;
+      background: var(--main-bg);
+      color:white;
+      transition: background 0.5s;
+    }
+    header, footer {
+      background: var(--card-bg);
+      padding:1rem; text-align:center;
+    }
+    nav a {
+      margin:0 10px; 
+      color:var(--main-color);
+      text-decoration:none;
+      font-weight:bold;
+    }
     section {padding:2rem; max-width:900px; margin:auto;}
-    .btn {background:#00ffcc; color:black; padding:10px; border:none; cursor:pointer; border-radius:5px;}
-    .card {background:#2c2c2c; padding:1rem; margin:1rem 0; border-radius:8px;}
+    .btn {
+      background:var(--main-color); color:black;
+      padding:10px; border:none; cursor:pointer; border-radius:5px;
+      transition: transform 0.2s;
+    }
+    .btn:hover {transform: scale(1.05);}
+    .card {
+      background:var(--card-bg); padding:1rem; margin:1rem 0; border-radius:8px;
+    }
     iframe {border:none;}
+    .highlight {
+      color:var(--main-color);
+      font-weight:bold;
+    }
+    .color-picker {
+      margin-top:10px;
+    }
   </style>
 </head>
 <body>
@@ -22,18 +55,24 @@
       <a href="#Reglas">Reglas</a>
       <a href="#Tienda">Tienda</a>
       <a href="#Eventos">Eventos</a>
+      <a href="#Votacion">Votación</a>
       <a href="#Contacto">Contacto</a>
     </nav>
   </header>
 
   <section id="Inicio">
     <h2>Presentación</h2>
-    <p>Bienvenido a ChaserbledSMP 🌟, un servidor survival amistoso. Versión: <strong>1.20.4</strong></p>
+    <p>Bienvenido a <span class="highlight">ChaserbledSMP 🌟</span>, un servidor survival amistoso. Versión: <strong>1.20.4</strong></p>
     <button class="btn" onclick="copyIP()">📋 Copiar IP</button>
-    <p id="copyMsg" style="color:#00ffcc;"></p>
+    <p id="copyMsg" style="color:var(--main-color);"></p>
     <div class="card">
       <h3>Discord</h3>
       <iframe src="https://discord.com/widget?id=TU_ID_DE_SERVIDOR&theme=dark" width="350" height="300"></iframe>
+    </div>
+    <div class="card">
+      <h3>🎨 Personaliza la web</h3>
+      <label>Elige tu color favorito:</label>
+      <input type="color" class="color-picker" onchange="changeColor(this.value)">
     </div>
   </section>
 
@@ -45,20 +84,30 @@
 
   <section id="Votacion">
     <h2>Vota por el Servidor</h2>
+    <p>¡Apóyanos votando y recibe <span class="highlight">recompensas exclusivas</span>! 🏆</p>
     <ul>
       <li><a href="https://minecraft-mp.com" target="_blank">Votar en Minecraft-MP</a></li>
       <li><a href="https://www.planetminecraft.com/" target="_blank">Votar en PlanetMinecraft</a></li>
     </ul>
+    <div class="card">
+      <h3>🎁 Ventajas por votar</h3>
+      <p>Al votar obtendrás:</p>
+      <ul>
+        <li>🔖 <span class="highlight">Tag exclusivo</span> <em>(Botador)</em></li>
+        <li>💎 <span class="highlight">Kit especial</span> con 15 diamantes</li>
+      </ul>
+      <p>¡Vota seguido y disfruta de tus ventajas en el servidor!</p>
+    </div>
   </section>
 
   <section id="Noticias">
     <h2>Noticias / Blog</h2>
-    <p>Aquí puedes publicar actualizaciones o eventos.</p>
+    <p>Aquí puedes publicar actualizaciones o eventos importantes.</p>
   </section>
 
   <section id="Reglas">
     <h2>Reglas y Guías</h2>
-    <p>1. Sé respetuoso. <br>2. No hagas trampa. <br>3. Cuida el mundo. <br>4. No seas malo con los demas. </p>
+    <p>1. Sé respetuoso. <br>2. No hagas trampa. <br>3. Cuida el mundo. <br>4. No seas malo con los demás. </p>
   </section>
 
   <section id="Tienda">
@@ -82,7 +131,10 @@
         document.getElementById('copyMsg').innerText = "✅ IP copiada: " + ip;
       });
     }
+
+    function changeColor(color) {
+      document.documentElement.style.setProperty('--main-color', color);
+    }
   </script>
 </body>
 </html>
-
