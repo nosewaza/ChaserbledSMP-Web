@@ -5,238 +5,177 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Alexis Dev — Redes</title>
   <style>
-    :root{--bg:#000;--accent:#1db954;--text:#eaeaea}
-    html,body{height:100%;margin:0;background:#000;color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}
-    /* Fullscreen stage */
-    .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    :root{
+      --bg:#000;
+      --text:#eaeaea;
+      --accent:#00c853; /* verde vivo para "Dev" */
+      --card-bg:rgba(255,255,255,0.03);
+      --glass:rgba(255,255,255,0.04);
+      --beat:0.62s; /* duración del pulso (ajusta si quieres más lento/rápido) */
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}
 
-    /* Canvas background that reacts to audio */
-    canvas#bg{position:absolute;inset:0;width:100%;height:100%;display:block}
+    /* Fullscreen wrapper */
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px;position:relative;overflow:hidden}
 
-    /* Overlay for initial locked screen */
-    .lock{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;gap:18px}
-    .lock .title{color:#fff;font-size:20px;letter-spacing:0.6px}
-    .lock .hint{color:#ccc;font-size:14px;opacity:0.9}
+    /* Animated background (solo CSS). Se activa con la clase .playing en body */
+    .bg-layer{position:absolute;inset:-15%;filter:blur(40px);opacity:0.18;transform:scale(1.2);pointer-events:none;transition:opacity .6s ease}
+    .bg-layer.one{background:radial-gradient(circle at 30% 30%, rgba(0,200,83,0.14), transparent 12%), radial-gradient(circle at 70% 70%, rgba(16,185,129,0.08), transparent 14%)}
+    .bg-layer.two{background:linear-gradient(90deg, rgba(6,6,6,0.6), rgba(2,2,2,0.6));mix-blend-mode:screen}
 
-    /* Hidden content container */
-    .content{position:relative;z-index:6;max-width:900px;width:92%;margin:0 auto;padding:40px;display:none;flex-direction:column;align-items:center;gap:22px}
+    body.playing .bg-layer.one{animation:beatMove var(--beat) linear infinite}
+    @keyframes beatMove{0%{transform:translate3d(-2%,0,0) scale(1.15) rotate(-1deg)}25%{transform:translate3d(2%,1%,0) scale(1.2) rotate(0.6deg)}50%{transform:translate3d(-1%,2%,0) scale(1.18) rotate(-0.4deg)}75%{transform:translate3d(1%,-1%,0) scale(1.22) rotate(0.4deg)}100%{transform:translate3d(-2%,0,0) scale(1.15) rotate(-1deg)}}
 
-    /* Profile */
-    .avatar{width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#222,#111);display:flex;align-items:center;justify-content:center;overflow:hidden;border:4px solid rgba(255,255,255,0.06)}
-    .avatar img{width:100%;height:100%;object-fit:cover}
+    /* Lock overlay (initial screen) */
+    .lock-screen{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
+    .lock-screen .btn-area{width:260px;height:260px;border-radius:20px;background:linear-gradient(180deg,#070707,#111);display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,0.6)}
+    .lock-screen h2{color:#fff;margin:0;font-size:18px}
+    .lock-screen p{color:#bbb;margin:0;font-size:14px}
 
-    h1{margin:0;font-size:28px}
+    /* Content card (hidden until unlock) */
+    .card{position:relative;z-index:12;max-width:920px;width:100%;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:28px}
+    body.playing .card{display:flex;animation:cardIn .6s ease both}
+    @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+    .profile{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .avatar{width:150px;height:150px;border-radius:50%;overflow:hidden;border:4px solid rgba(255,255,255,0.06);background:linear-gradient(135deg,#0b0b0b,#111);display:flex;align-items:center;justify-content:center}
+    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+
+    h1{margin:0;font-size:30px}
     h1 .dev{color:var(--accent)}
 
-    /* Links */
-    .links{display:flex;flex-direction:column;gap:12px;width:100%;max-width:480px}
-    .links a{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;text-decoration:none;font-weight:600;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));color:var(--text);box-shadow:0 6px 18px rgba(0,0,0,0.6);transition:transform .16s ease,filter .16s}
-    .links a:hover{transform:translateY(-4px)}
-    .links .icon{width:36px;height:36px;border-radius:8px;display:inline-grid;place-items:center;background:rgba(255,255,255,0.04);font-size:18px}
+    /* Links list */
+    .links{display:flex;flex-direction:column;gap:12px;width:100%;max-width:520px}
+    .link{display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;text-decoration:none;font-weight:700;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));color:var(--text);box-shadow:0 10px 30px rgba(0,0,0,0.6);transition:transform .18s ease,box-shadow .18s}
+    .link:hover{transform:translateY(-6px);box-shadow:0 18px 44px rgba(0,0,0,0.65)}
+    .icon{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:var(--glass);font-size:18px}
+
+    /* Neon accent underlines */
+    .link::after{content:'';height:2px;width:0;background:linear-gradient(90deg,var(--accent),rgba(0,200,83,0.6));display:block;margin-left:auto;border-radius:4px;transition:width .28s ease}
+    .link:hover::after{width:40%}
 
     /* About text */
-    .about{max-width:640px;text-align:center;color:#dcdcdc;line-height:1.5}
+    .about{max-width:780px;text-align:center;color:#dcdcdc;line-height:1.5}
 
-    /* Footer small */
+    /* Small footer */
     .small{font-size:13px;color:#9b9b9b}
 
-    /* Fade/transition */
-    .fade-in{animation:fadeIn .6s ease both}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    /* Mini equalizer purely CSS (reacts to .playing by animating bars) */\    .eq{display:flex;gap:6px;align-items:flex-end}
+    .eq-b{width:6px;height:24px;background:linear-gradient(180deg,var(--accent),rgba(0,200,83,0.6));border-radius:2px;transform-origin:center bottom;animation:idle 1.2s linear infinite}
+    .eq-b.n1{animation-duration:calc(var(--beat) * 1.0)}
+    .eq-b.n2{animation-duration:calc(var(--beat) * 0.9);animation-delay:-0.04s}
+    .eq-b.n3{animation-duration:calc(var(--beat) * 1.15);animation-delay:-0.08s}
+    .eq-b.n4{animation-duration:calc(var(--beat) * 0.78);animation-delay:-0.02s}
+    .eq-b.n5{animation-duration:calc(var(--beat) * 1.35);animation-delay:-0.06s}
+    @keyframes idle{0%{transform:scaleY(0.35)}50%{transform:scaleY(1.05)}100%{transform:scaleY(0.35)}}
+    body.playing .eq-b{animation-play-state:running}
+    body:not(.playing) .eq-b{animation-play-state:paused;transform:scaleY(0.2)}
 
-    /* Mobile tweaks */
-    @media (max-width:520px){.avatar{width:110px;height:110px}.links a{padding:12px}}
+    /* Responsive */
+    @media (max-width:640px){
+      .avatar{width:120px;height:120px}
+      h1{font-size:22px}
+      .link{padding:12px}
+    }
   </style>
 </head>
-<body>
-  <div class="stage" id="stage">
-    <canvas id="bg"></canvas>
+<body class="locked">
+  <div class="wrap">
+    <div class="bg-layer one" aria-hidden></div>
+    <div class="bg-layer two" aria-hidden></div>
 
-    <!-- clickable lock screen -->
-    <div class="lock" id="lock" style="text-align:center">
-      <div style="width:220px;height:220px;border-radius:12px;background:linear-gradient(135deg,#0b0b0b,#111);display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,0.6)">
-        <!-- small visual circle -->
-        <svg width="120" height="120" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- LOCK SCREEN -->
+    <div class="lock-screen" id="lock">
+      <div class="btn-area" aria-hidden>
+        <svg width="110" height="110" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <circle cx="50" cy="50" r="40" stroke="#222" stroke-width="6" fill="#000" />
           <path d="M35 55c6 6 18 6 24 0" stroke="#666" stroke-width="4" fill="none" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="title">Clickea cualquier parte de la pantalla para desbloquear :)</div>
-      <div class="hint">(la música y el fondo se activarán al tocar)</div>
+      <h2>Clickea cualquier parte de la pantalla para desbloquear :)</h2>
+      <p>La música se reproducirá al tocar — pulsa otra vez para pausar</p>
     </div>
 
-    <!-- main content (hidden until unlock) -->
-    <main class="content" id="content">
-      <div class="avatar fade-in" id="avatarPlaceholder">
-        <!-- Replace with your photo later -->
-        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><rect width='100%' height='100%' fill='%230b0b0b'/><text x='50%' y='50%' fill='%23888' font-size='32' font-family='Arial' text-anchor='middle' alignment-baseline='central'>Tu foto aquí</text></svg>" alt="avatar" />
+    <!-- MAIN CARD (hidden until click) -->
+    <main class="card" id="card" role="main">
+      <div class="profile">
+        <div class="avatar" id="avatar">
+          <!-- Replace this src later with your photo URL or local file in the repo -->
+          <img id="avatarImg" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><rect width='100%' height='100%' fill='%230b0b0b'/><text x='50%' y='50%' fill='%23888' font-size='30' font-family='Arial' text-anchor='middle' alignment-baseline='central'>Tu foto aqu&iacute;</text></svg>" alt="Avatar Alexis Dev">
+        </div>
+        <h1>Alexis <span class="dev">Dev</span></h1>
+        <!-- tiny eq for vibe -->
+        <div class="eq" aria-hidden>
+          <div class="eq-b n1"></div>
+          <div class="eq-b n2"></div>
+          <div class="eq-b n3"></div>
+          <div class="eq-b n4"></div>
+          <div class="eq-b n5"></div>
+        </div>
       </div>
 
-      <h1 class="fade-in">Alexis <span class="dev">Dev</span></h1>
-
-      <div class="links fade-in" id="links">
-        <a href="#" data-link="discord" id="link-discord">
-          <span class="icon">💬</span>
-          Discord — alexis#0000
-        </a>
-        <a href="#" data-link="youtube" id="link-youtube">
-          <span class="icon">▶️</span>
-          YouTube — Alexis Dev
-        </a>
-        <a href="#" data-link="tiktok" id="link-tiktok">
-          <span class="icon">🎵</span>
-          TikTok — @AlexisDev
-        </a>
-        <a href="#" data-link="minecraft" id="link-mc">
-          <span class="icon">⛏️</span>
-          Servidor Minecraft — ChaserbledSMP.aternos.me
-        </a>
+      <div class="links" id="links">
+        <a class="link" id="link-discord" href="#" target="_blank"><span class="icon">💬</span>Discord — alexis#0000</a>
+        <a class="link" id="link-youtube" href="#" target="_blank"><span class="icon">▶️</span>YouTube — Alexis Dev</a>
+        <a class="link" id="link-tiktok" href="#" target="_blank"><span class="icon">🎵</span>TikTok — @AlexisDev</a>
+        <a class="link" id="link-mc" href="#" target="_blank"><span class="icon">⛏️</span>Servidor Minecraft — ChaserbledSMP.aternos.me</a>
       </div>
 
-      <p class="about fade-in">Hola soy Alexis, un desarrollador de juegos que le gusta socializar y hacer amigos, por el momento no estoy en el tema de desarrollo porque mi PC tuvo problemas y se daño, pero estoy pensando en comprarme una más adelante, me puedes contactar por discord para que te unas a mi server, me haría muy feliz tener a más gente en mi comunidad :)</p>
+      <p class="about">Hola soy Alexis, un desarrollador de juegos que le gusta socializar y hacer amigos, por el momento no estoy en el tema de desarrollo porque mi PC tuvo problemas y se daño, pero estoy pensando en comprarme una más adelante, me puedes contactar por discord para que te unas a mi server, me haría muy feliz tener a más gente en mi comunidad :)</p>
 
-      <div class="small">Música: Loose Cannon — (reemplaza el audio por la pista que quieras)</div>
+      <div class="small">Música: Loose Cannon — (sube tu .mp3 en /audio/loose-cannon.mp3 y reemplaza el src si quieres)</div>
     </main>
 
-    <!-- Hidden audio element (replace src with a file or stream). Will start on first click. -->
-    <audio id="audio" loop crossorigin="anonymous">
-      <!-- Reemplaza la URL siguiente por una URL de tu propia pista .mp3 o por un CDN/host que tengas permiso de usar -->
+    <!-- Audio (user must provide the file in /audio/loose-cannon.mp3 inside repo) -->
+    <audio id="audio" loop preload="none">
       <source src="/audio/loose-cannon.mp3" type="audio/mpeg">
       Tu navegador no soporta audio.
     </audio>
   </div>
 
   <script>
-    // Basic WebAudio visualizer + interaction
-    const stage = document.getElementById('stage');
+    // Mínimo JS: controla desbloqueo, play/pause y activa animaciones CSS (la mayor parte es CSS)
+    const body = document.body;
     const lock = document.getElementById('lock');
-    const content = document.getElementById('content');
-    const audioEl = document.getElementById('audio');
-    const canvas = document.getElementById('bg');
-    const ctx = canvas.getContext('2d');
+    const card = document.getElementById('card');
+    const audio = document.getElementById('audio');
 
-    let audioCtx, analyser, source;
-    let dataArray, bufferLength;
-    let particles = [];
-
-    function resize(){
-      canvas.width = innerWidth * devicePixelRatio;
-      canvas.height = innerHeight * devicePixelRatio;
-      ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-    }
-    addEventListener('resize', resize);
-    resize();
-
-    function initAudio() {
-      if (audioCtx) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      bufferLength = analyser.frequencyBinCount;
-      dataArray = new Uint8Array(bufferLength);
-      source = audioCtx.createMediaElementSource(audioEl);
-      source.connect(analyser);
-      analyser.connect(audioCtx.destination);
-
-      // create particles
-      particles = Array.from({length: Math.min(140, Math.floor((innerWidth+innerHeight)/12))}).map(()=>({
-        x: Math.random()*innerWidth,
-        y: Math.random()*innerHeight,
-        r: 2+Math.random()*6,
-        vx:(Math.random()-0.5)*0.6,
-        vy:(Math.random()-0.5)*0.6
-      }));
-
-      requestAnimationFrame(animate);
-    }
-
-    function animate(){
-      ctx.clearRect(0,0,innerWidth,innerHeight);
-      if (!analyser) return;
-      analyser.getByteFrequencyData(dataArray);
-
-      // compute an overall level
-      let sum = 0;
-      for(let i=0;i<bufferLength;i++) sum += dataArray[i];
-      const avg = sum / bufferLength / 255; // 0..1
-
-      // background subtle radial
-      const g = ctx.createLinearGradient(0,0,innerWidth,innerHeight);
-      const mix = Math.min(0.6, 0.15 + avg*0.9);
-      g.addColorStop(0, `rgba(6,6,6,${0.9})`);
-      g.addColorStop(1, `rgba(15,15,15,${0.9 - mix})`);
-      ctx.fillStyle = g;
-      ctx.fillRect(0,0,innerWidth,innerHeight);
-
-      // draw particles that pulse with avg
-      for(let i=0;i<particles.length;i++){
-        const p = particles[i];
-        // push by music
-        p.x += p.vx + Math.cos(i+Date.now()/600)*0.2*avg;
-        p.y += p.vy + Math.sin(i+Date.now()/500)*0.2*avg;
-        if(p.x < -20) p.x = innerWidth+20;
-        if(p.x > innerWidth+20) p.x = -20;
-        if(p.y < -20) p.y = innerHeight+20;
-        if(p.y > innerHeight+20) p.y = -20;
-
-        const rr = p.r * (1 + avg*2);
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(40,200,120,${0.05 + 0.35*avg})`;
-        ctx.arc(p.x,p.y,rr,0,Math.PI*2);
-        ctx.fill();
-      }
-
-      // add soft radial center pulse
-      const cx = innerWidth/2, cy = innerHeight/2;
-      const grd = ctx.createRadialGradient(cx,cy,10,cx,cy,Math.max(innerWidth,innerHeight)/1.5);
-      grd.addColorStop(0, `rgba(20,80,40,${0.02 + avg*0.12})`);
-      grd.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = grd;
-      ctx.fillRect(0,0,innerWidth,innerHeight);
-
-      requestAnimationFrame(animate);
-    }
-
-    // Unlock handler: plays audio and reveals content
-    async function unlock(){
+    let unlocked = false;
+    async function handleClick(){
       try{
-        // initialize audio context + visualizer
-        initAudio();
-        // resume audio context on interaction
-        if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
-        // try to play the audio element
-        audioEl.currentTime = 0;
-        await audioEl.play();
+        if(!unlocked){
+          // first interaction: play audio and reveal
+          await audio.play();
+          body.classList.add('playing');
+          lock.style.display = 'none';
+          card.style.display = 'flex';
+          unlocked = true;
+        } else {
+          // toggle play/pause on subsequent clicks
+          if(audio.paused){ await audio.play(); body.classList.add('playing'); }
+          else { audio.pause(); body.classList.remove('playing'); }
+        }
       }catch(e){
-        console.warn('Autoplay blocked or error:', e);
+        console.warn('Error reproduciendo audio (posible bloqueo):', e);
+        // even if audio falla, desbloqueamos para que el usuario vea la página
+        lock.style.display = 'none';
+        card.style.display = 'flex';
+        unlocked = true;
       }
-
-      // fade out lock and show content
-      lock.style.transition = 'opacity .6s ease';
-      lock.style.opacity = 0;
-      setTimeout(()=>{ lock.style.display = 'none'; }, 700);
-
-      content.style.display = 'flex';
-      content.style.opacity = 0;
-      content.style.transition = 'opacity .8s ease, transform .6s ease';
-      setTimeout(()=>{ content.style.opacity = 1; content.style.transform = 'none'; }, 60);
-
-      // small entrance effect for links
-      const nodes = document.querySelectorAll('.fade-in');
-      nodes.forEach((n,i)=>{ n.style.opacity=0; setTimeout(()=>{ n.style.opacity=1;n.style.transform='none'}, 200 + i*120)});
     }
 
-    // listen for first tap/click anywhere
-    function onFirstClick(){ unlock(); window.removeEventListener('pointerdown', onFirstClick); }
-    window.addEventListener('pointerdown', onFirstClick);
+    // listen for first tap/click anywhere (pointerdown para mejor compatibilidad móvil)
+    window.addEventListener('pointerdown', handleClick, {passive:true});
 
-    // Small helpers to replace links easily
+    // Quick helpers: cambia hrefs y avatar si quieres programáticamente.
     document.getElementById('link-discord').href = 'https://discord.gg/tu-invite';
     document.getElementById('link-youtube').href = 'https://youtube.com/@tu_usuario';
     document.getElementById('link-tiktok').href = 'https://tiktok.com/@tu_usuario';
-    document.getElementById('link-mc').href = 'https://play.example.com';
+    document.getElementById('link-mc').href = 'https://ChaserbledSMP.aternos.me';
 
-    // If you want to change the avatar later, replace the <img src="..."> with your URL.
+    // Si quieres asignar tu avatar desde JS (opcional):
+    // document.getElementById('avatarImg').src = 'https://ruta-a-tu-foto.jpg';
   </script>
 </body>
 </html>
