@@ -1,151 +1,242 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ChaserbledSMP - Servidor de Minecraft</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Alexis Dev — Redes</title>
   <style>
-    :root {
-      --main-bg: #1e1e1e;
-      --main-color: #00ffcc;
-      --card-bg: #2c2c2c;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      margin:0; padding:0;
-      background: var(--main-bg);
-      color:white;
-      transition: background 0.5s;
-    }
-    header, footer {
-      background: var(--card-bg);
-      padding:1rem; text-align:center;
-    }
-    nav a {
-      margin:0 10px; 
-      color:var(--main-color);
-      text-decoration:none;
-      font-weight:bold;
-    }
-    section {padding:2rem; max-width:900px; margin:auto;}
-    .btn {
-      background:var(--main-color); color:black;
-      padding:10px; border:none; cursor:pointer; border-radius:5px;
-      transition: transform 0.2s;
-      margin:5px;
-    }
-    .btn:hover {transform: scale(1.05);}
-    .card {
-      background:var(--card-bg); padding:1rem; margin:1rem 0; border-radius:8px;
-    }
-    iframe {border:none;}
-    .highlight {
-      color:var(--main-color);
-      font-weight:bold;
-    }
-    .color-picker {
-      margin-top:10px;
-    }
+    :root{--bg:#000;--accent:#1db954;--text:#eaeaea}
+    html,body{height:100%;margin:0;background:#000;color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}
+    /* Fullscreen stage */
+    .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+    /* Canvas background that reacts to audio */
+    canvas#bg{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+    /* Overlay for initial locked screen */
+    .lock{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;gap:18px}
+    .lock .title{color:#fff;font-size:20px;letter-spacing:0.6px}
+    .lock .hint{color:#ccc;font-size:14px;opacity:0.9}
+
+    /* Hidden content container */
+    .content{position:relative;z-index:6;max-width:900px;width:92%;margin:0 auto;padding:40px;display:none;flex-direction:column;align-items:center;gap:22px}
+
+    /* Profile */
+    .avatar{width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#222,#111);display:flex;align-items:center;justify-content:center;overflow:hidden;border:4px solid rgba(255,255,255,0.06)}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+
+    h1{margin:0;font-size:28px}
+    h1 .dev{color:var(--accent)}
+
+    /* Links */
+    .links{display:flex;flex-direction:column;gap:12px;width:100%;max-width:480px}
+    .links a{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;text-decoration:none;font-weight:600;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));color:var(--text);box-shadow:0 6px 18px rgba(0,0,0,0.6);transition:transform .16s ease,filter .16s}
+    .links a:hover{transform:translateY(-4px)}
+    .links .icon{width:36px;height:36px;border-radius:8px;display:inline-grid;place-items:center;background:rgba(255,255,255,0.04);font-size:18px}
+
+    /* About text */
+    .about{max-width:640px;text-align:center;color:#dcdcdc;line-height:1.5}
+
+    /* Footer small */
+    .small{font-size:13px;color:#9b9b9b}
+
+    /* Fade/transition */
+    .fade-in{animation:fadeIn .6s ease both}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    /* Mobile tweaks */
+    @media (max-width:520px){.avatar{width:110px;height:110px}.links a{padding:12px}}
   </style>
 </head>
 <body>
-  <header>
-    <h1>🌍 ChaserbledSMP</h1>
-    <nav>
-      <a href="#Inicio">Inicio</a>
-      <a href="#Reglas">Reglas</a>
-      <a href="#Tienda">Tienda</a>
-      <a href="#Eventos">Eventos</a>
-      <a href="#Votacion">Votación</a>
-      <a href="#Contacto">Contacto</a>
-    </nav>
-  </header>
+  <div class="stage" id="stage">
+    <canvas id="bg"></canvas>
 
-  <section id="Inicio">
-    <h2>Presentación</h2>
-    <p>Bienvenido a <span class="highlight">ChaserbledSMP 🌟</span>, un servidor survival amistoso. Versión: <strong>1.21.8</strong></p>
-    
-    <!-- Botones para copiar IP -->
-    <button class="btn" onclick="copyIP('java')">📋 Copiar IP (Java)</button>
-    <button class="btn" onclick="copyIP('bedrock')">📋 Copiar IP (Bedrock)</button>
-    
-    <p id="copyMsg" style="color:var(--main-color);"></p>
-
-    <div class="card">
-      <h3>Discord</h3>
-      <iframe src="https://discord.com/widget?id=1404603015968591872&theme=dark" width="350" height="300"></iframe>
+    <!-- clickable lock screen -->
+    <div class="lock" id="lock" style="text-align:center">
+      <div style="width:220px;height:220px;border-radius:12px;background:linear-gradient(135deg,#0b0b0b,#111);display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,0.6)">
+        <!-- small visual circle -->
+        <svg width="120" height="120" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="40" stroke="#222" stroke-width="6" fill="#000" />
+          <path d="M35 55c6 6 18 6 24 0" stroke="#666" stroke-width="4" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="title">Clickea cualquier parte de la pantalla para desbloquear :)</div>
+      <div class="hint">(la música y el fondo se activarán al tocar)</div>
     </div>
-    <div class="card">
-      <h3>🎨 Personaliza la web</h3>
-      <label>Elige tu color favorito:</label>
-      <input type="color" class="color-picker" onchange="changeColor(this.value)">
-    </div>
-  </section>
 
-  <section id="Eventos">
-    <h2>Calendario de Eventos</h2>
-    <iframe src="https://calendar.google.com/calendar/embed?src=TU_CALENDARIO_PUBLICO&ctz=America%2FSanto_Domingo" 
-            style="border: 0" width="100%" height="600"></iframe>
-  </section>
+    <!-- main content (hidden until unlock) -->
+    <main class="content" id="content">
+      <div class="avatar fade-in" id="avatarPlaceholder">
+        <!-- Replace with your photo later -->
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><rect width='100%' height='100%' fill='%230b0b0b'/><text x='50%' y='50%' fill='%23888' font-size='32' font-family='Arial' text-anchor='middle' alignment-baseline='central'>Tu foto aquí</text></svg>" alt="avatar" />
+      </div>
 
-  <section id="Votacion">
-    <h2>Vota por el Servidor</h2>
-    <p>¡Apóyanos votando y recibe <span class="highlight">recompensas exclusivas</span>! 🏆</p>
-    <ul>
-      <li><a href="https://minecraft-mp.com" target="_blank">Votar en Minecraft-MP</a></li>
-      <li><a href="https://www.planetminecraft.com/" target="_blank">Votar en PlanetMinecraft</a></li>
-    </ul>
-    <div class="card">
-      <h3>🎁 Ventajas por votar</h3>
-      <p>Al votar obtendrás:</p>
-      <ul>
-        <li>🔖 <span class="highlight">Tag exclusivo</span> <em>(Botador)</em></li>
-        <li>💎 <span class="highlight">Kit especial</span> con 15 diamantes</li>
-      </ul>
-      <p>¡Vota seguido y disfruta de tus ventajas en el servidor!</p>
-    </div>
-  </section>
+      <h1 class="fade-in">Alexis <span class="dev">Dev</span></h1>
 
-  <section id="Noticias">
-    <h2>Noticias / Blog</h2>
-    <p>Aun no hay nada :v.</p>
-  </section>
+      <div class="links fade-in" id="links">
+        <a href="#" data-link="discord" id="link-discord">
+          <span class="icon">💬</span>
+          Discord — alexis#0000
+        </a>
+        <a href="#" data-link="youtube" id="link-youtube">
+          <span class="icon">▶️</span>
+          YouTube — Alexis Dev
+        </a>
+        <a href="#" data-link="tiktok" id="link-tiktok">
+          <span class="icon">🎵</span>
+          TikTok — @AlexisDev
+        </a>
+        <a href="#" data-link="minecraft" id="link-mc">
+          <span class="icon">⛏️</span>
+          Servidor Minecraft — ChaserbledSMP.aternos.me
+        </a>
+      </div>
 
-  <section id="Reglas">
-    <h2>Reglas y Guías</h2>
-    <p>1. Sé respetuoso. <br>2. No hagas trampa. <br>3. Cuida el mundo. <br>4. No seas malo con los demás. </p>
-  </section>
+      <p class="about fade-in">Hola soy Alexis, un desarrollador de juegos que le gusta socializar y hacer amigos, por el momento no estoy en el tema de desarrollo porque mi PC tuvo problemas y se daño, pero estoy pensando en comprarme una más adelante, me puedes contactar por discord para que te unas a mi server, me haría muy feliz tener a más gente en mi comunidad :)</p>
 
-  <section id="Tienda">
-    <h2>Tienda / Donaciones</h2>
-    <p>Apoya el servidor usando PayPal: <a href="https://paypal.me/alexisXversion" target="_blank">Donar</a></p>
-  </section>
+      <div class="small">Música: Loose Cannon — (reemplaza el audio por la pista que quieras)</div>
+    </main>
 
-  <section id="Contacto">
-    <h2>Contacto</h2>
-    <p>Únete a nuestro Discord o escríbenos al correo: <strong>alexisXDriia@gmail.com</strong></p>
-  </section>
-
-  <footer>
-    © 2025 ChaserbledSMP - Todos los derechos reservados
-  </footer>
+    <!-- Hidden audio element (replace src with a file or stream). Will start on first click. -->
+    <audio id="audio" loop crossorigin="anonymous">
+      <!-- Reemplaza la URL siguiente por una URL de tu propia pista .mp3 o por un CDN/host que tengas permiso de usar -->
+      <source src="/audio/loose-cannon.mp3" type="audio/mpeg">
+      Tu navegador no soporta audio.
+    </audio>
+  </div>
 
   <script>
-    function copyIP(type) {
-      let ip = "";
-      if (type === "java") {
-        ip = "ChaserbledSMP.aternos.me";
-      } else if (type === "bedrock") {
-        ip = "ChaserbledSMP.aternos.me:15465";
-      }
-      navigator.clipboard.writeText(ip).then(() => {
-        document.getElementById('copyMsg').innerText = "✅ IP copiada: " + ip;
-      });
+    // Basic WebAudio visualizer + interaction
+    const stage = document.getElementById('stage');
+    const lock = document.getElementById('lock');
+    const content = document.getElementById('content');
+    const audioEl = document.getElementById('audio');
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+
+    let audioCtx, analyser, source;
+    let dataArray, bufferLength;
+    let particles = [];
+
+    function resize(){
+      canvas.width = innerWidth * devicePixelRatio;
+      canvas.height = innerHeight * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    }
+    addEventListener('resize', resize);
+    resize();
+
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
+      source = audioCtx.createMediaElementSource(audioEl);
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      // create particles
+      particles = Array.from({length: Math.min(140, Math.floor((innerWidth+innerHeight)/12))}).map(()=>({
+        x: Math.random()*innerWidth,
+        y: Math.random()*innerHeight,
+        r: 2+Math.random()*6,
+        vx:(Math.random()-0.5)*0.6,
+        vy:(Math.random()-0.5)*0.6
+      }));
+
+      requestAnimationFrame(animate);
     }
 
-    function changeColor(color) {
-      document.documentElement.style.setProperty('--main-color', color);
+    function animate(){
+      ctx.clearRect(0,0,innerWidth,innerHeight);
+      if (!analyser) return;
+      analyser.getByteFrequencyData(dataArray);
+
+      // compute an overall level
+      let sum = 0;
+      for(let i=0;i<bufferLength;i++) sum += dataArray[i];
+      const avg = sum / bufferLength / 255; // 0..1
+
+      // background subtle radial
+      const g = ctx.createLinearGradient(0,0,innerWidth,innerHeight);
+      const mix = Math.min(0.6, 0.15 + avg*0.9);
+      g.addColorStop(0, `rgba(6,6,6,${0.9})`);
+      g.addColorStop(1, `rgba(15,15,15,${0.9 - mix})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,innerWidth,innerHeight);
+
+      // draw particles that pulse with avg
+      for(let i=0;i<particles.length;i++){
+        const p = particles[i];
+        // push by music
+        p.x += p.vx + Math.cos(i+Date.now()/600)*0.2*avg;
+        p.y += p.vy + Math.sin(i+Date.now()/500)*0.2*avg;
+        if(p.x < -20) p.x = innerWidth+20;
+        if(p.x > innerWidth+20) p.x = -20;
+        if(p.y < -20) p.y = innerHeight+20;
+        if(p.y > innerHeight+20) p.y = -20;
+
+        const rr = p.r * (1 + avg*2);
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(40,200,120,${0.05 + 0.35*avg})`;
+        ctx.arc(p.x,p.y,rr,0,Math.PI*2);
+        ctx.fill();
+      }
+
+      // add soft radial center pulse
+      const cx = innerWidth/2, cy = innerHeight/2;
+      const grd = ctx.createRadialGradient(cx,cy,10,cx,cy,Math.max(innerWidth,innerHeight)/1.5);
+      grd.addColorStop(0, `rgba(20,80,40,${0.02 + avg*0.12})`);
+      grd.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0,0,innerWidth,innerHeight);
+
+      requestAnimationFrame(animate);
     }
+
+    // Unlock handler: plays audio and reveals content
+    async function unlock(){
+      try{
+        // initialize audio context + visualizer
+        initAudio();
+        // resume audio context on interaction
+        if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
+        // try to play the audio element
+        audioEl.currentTime = 0;
+        await audioEl.play();
+      }catch(e){
+        console.warn('Autoplay blocked or error:', e);
+      }
+
+      // fade out lock and show content
+      lock.style.transition = 'opacity .6s ease';
+      lock.style.opacity = 0;
+      setTimeout(()=>{ lock.style.display = 'none'; }, 700);
+
+      content.style.display = 'flex';
+      content.style.opacity = 0;
+      content.style.transition = 'opacity .8s ease, transform .6s ease';
+      setTimeout(()=>{ content.style.opacity = 1; content.style.transform = 'none'; }, 60);
+
+      // small entrance effect for links
+      const nodes = document.querySelectorAll('.fade-in');
+      nodes.forEach((n,i)=>{ n.style.opacity=0; setTimeout(()=>{ n.style.opacity=1;n.style.transform='none'}, 200 + i*120)});
+    }
+
+    // listen for first tap/click anywhere
+    function onFirstClick(){ unlock(); window.removeEventListener('pointerdown', onFirstClick); }
+    window.addEventListener('pointerdown', onFirstClick);
+
+    // Small helpers to replace links easily
+    document.getElementById('link-discord').href = 'https://discord.gg/tu-invite';
+    document.getElementById('link-youtube').href = 'https://youtube.com/@tu_usuario';
+    document.getElementById('link-tiktok').href = 'https://tiktok.com/@tu_usuario';
+    document.getElementById('link-mc').href = 'https://play.example.com';
+
+    // If you want to change the avatar later, replace the <img src="..."> with your URL.
   </script>
 </body>
 </html>
